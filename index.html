@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wordle Solver AI - Evolution vs Information Theory</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='16' fill='%23538d4e'/><text x='50' y='72' font-size='62' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'>W</text></svg>">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <h1 class="logo"><span class="tile-g">W</span><span class="tile-y">O</span><span class="tile-b">R</span><span class="tile-g">D</span><span class="tile-y">L</span><span class="tile-b">E</span> <span class="logo-rest">SOLVER&nbsp;AI</span></h1>
+    <p class="tagline">Two kinds of intelligence, one puzzle: watch <b>evolution</b> and <b>information theory</b> solve Wordle differently.</p>
+    <nav class="tabs" id="tabs">
+      <button class="tab active" data-tab="play">🎮 Play vs AI</button>
+      <button class="tab" data-tab="assistant">🧭 Solver Assistant</button>
+      <button class="tab" data-tab="evolution">🧬 Evolution Lab</button>
+      <button class="tab" data-tab="compare">⚔️ Compare Solvers</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<!-- ============================== PLAY ============================== -->
+<section class="panel" id="panel-play">
+  <div class="controls card">
+    <div class="control-group">
+      <label>Secret word</label>
+      <div class="seg" id="play-source">
+        <button data-v="random" class="on">Random</button>
+        <button data-v="daily">Daily</button>
+        <button data-v="custom">Custom</button>
+      </div>
+      <input id="play-custom-word" class="word-input hidden" maxlength="5" placeholder="5 letters" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="control-group">
+      <label>Opponent</label>
+      <div class="seg" id="play-opponent">
+        <button data-v="entropy" class="on">Entropy AI</button>
+        <button data-v="ga">Evolved GA</button>
+        <button data-v="both">Both</button>
+      </div>
+    </div>
+    <div class="control-group checks">
+      <label class="check"><input type="checkbox" id="play-same-opener"> AI copies your first word</label>
+      <label class="check"><input type="checkbox" id="play-hide-ai" checked> Hide AI letters until game over</label>
+    </div>
+    <button class="btn primary" id="play-new">New Game</button>
+  </div>
+
+  <div id="play-banner" class="banner hidden"></div>
+
+  <div class="boards-row" id="play-boards">
+    <div class="board-col card">
+      <h3>You</h3>
+      <div id="board-you"></div>
+      <div id="keyboard"></div>
+    </div>
+    <div class="board-col card" id="ai-col-1">
+      <h3 id="ai-name-1">Entropy AI</h3>
+      <div id="board-ai-1"></div>
+      <div class="explain" id="explain-ai-1"><em>The AI explains each guess here.</em></div>
+    </div>
+    <div class="board-col card hidden" id="ai-col-2">
+      <h3 id="ai-name-2">Evolved GA</h3>
+      <div id="board-ai-2"></div>
+      <div class="explain" id="explain-ai-2"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ ASSISTANT ============================ -->
+<section class="panel hidden" id="panel-assistant">
+  <div class="assistant-grid">
+    <div class="card">
+      <h3>Your puzzle</h3>
+      <p class="hint-text">Type a guess and press <b>Enter</b>, then click the tiles to match the colors the real game gave you, and press <b>Enter</b> again (or ✓) to confirm. Works for the real NYT puzzle or any custom game.</p>
+      <div id="assist-board"></div>
+      <div class="row-actions">
+        <button class="btn small" id="assist-confirm">✓ Confirm colors</button>
+        <button class="btn small ghost" id="assist-undo">↩ Undo row</button>
+        <button class="btn small ghost" id="assist-reset">Reset</button>
+      </div>
+      <div id="assist-keyboard"></div>
+    </div>
+    <div class="card">
+      <h3>AI analysis <span class="badge" id="assist-count">2,315 candidates</span></h3>
+      <div class="explain" id="assist-explain">Before any information, the best opener is precomputed from full-dictionary entropy. Play a row to see the field narrow.</div>
+      <table class="stats-table" id="assist-suggestions"></table>
+      <h4>Remaining possible answers</h4>
+      <div class="chips" id="assist-candidates"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ EVOLUTION ============================ -->
+<section class="panel hidden" id="panel-evolution">
+  <div class="controls card">
+    <div class="control-group">
+      <label>Population</label>
+      <div class="seg" id="evo-pop">
+        <button data-v="60">60</button>
+        <button data-v="120" class="on">120</button>
+        <button data-v="200">200</button>
+      </div>
+    </div>
+    <div class="control-group">
+      <label>Games per agent</label>
+      <div class="seg" id="evo-games">
+        <button data-v="15">15</button>
+        <button data-v="25" class="on">25</button>
+        <button data-v="40">40</button>
+      </div>
+    </div>
+    <div class="control-group">
+      <label>Speed</label>
+      <input type="range" id="evo-speed" min="1" max="10" value="5">
+    </div>
+    <button class="btn primary" id="evo-start">▶ Start evolution</button>
+    <button class="btn ghost" id="evo-reset">Reset</button>
+    <div class="gen-counter">Generation <span id="evo-gen">0</span></div>
+  </div>
+
+  <div class="card evo-arena-card">
+    <h3>Live arena: the population plays Wordle <span class="badge" id="arena-round">round 1</span></h3>
+    <p class="hint-text">Each cell is one agent's latest guess against the shared target word. A <span class="gold-word">gold outline</span> means solved; faded rows ran out of turns. Before you start evolution the agents are random. Run a few generations and watch the grid turn green faster each round.</p>
+    <div class="arena-bar">
+      <span class="arena-label">Target</span>
+      <span class="arena-word" id="arena-target">?????</span>
+      <span class="arena-stats">turn <b id="arena-turn">0</b>/6 · solved <b id="arena-solved">0</b>/<span id="arena-total">100</span></span>
+    </div>
+    <canvas id="arena-canvas" width="820" height="350"></canvas>
+  </div>
+
+  <div class="evo-grid">
+    <div class="card evo-canvas-card">
+      <h3>Population: each dot is an agent playing real Wordle games</h3>
+      <p class="hint-text">Better strategies drift toward the top-left (fewer guesses, higher solve rate). The solve-rate axis is zoomed above the dashed 75% line so the leaders stay spread apart. Each generation the weakest half <span class="dead-word">dies</span>, elites get a <span class="gold-word">gold ring</span>, and children spawn from surviving parents.</p>
+      <canvas id="evo-canvas" width="820" height="460"></canvas>
+    </div>
+    <div class="evo-side">
+      <div class="card">
+        <h3>Evolution over generations</h3>
+        <canvas id="evo-chart" width="380" height="200"></canvas>
+        <div class="legend">
+          <span><i class="dot best"></i> best avg guesses</span>
+          <span><i class="dot mean"></i> population mean</span>
+          <span><i class="dot rate"></i> best solve rate</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>All-time champion</h3>
+        <div id="evo-champion" class="champion-box"><em>Run evolution to crown a champion.</em></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Leaderboard: top strategies this generation</h3>
+    <table class="stats-table" id="evo-leaderboard"></table>
+  </div>
+</section>
+
+<!-- ============================= COMPARE ============================= -->
+<section class="panel hidden" id="panel-compare">
+  <div class="controls card">
+    <div class="control-group">
+      <label>Target word</label>
+      <input id="cmp-word" class="word-input" maxlength="5" placeholder="5 letters" autocomplete="off" spellcheck="false">
+    </div>
+    <button class="btn small ghost" id="cmp-random">🎲 Random</button>
+    <button class="btn small ghost" id="cmp-daily">📅 Daily</button>
+    <div class="control-group">
+      <label>Force same opener (optional)</label>
+      <input id="cmp-opener" class="word-input" maxlength="5" placeholder="e.g. crane" autocomplete="off" spellcheck="false">
+    </div>
+    <button class="btn primary" id="cmp-run">Run comparison</button>
+  </div>
+  <div id="cmp-banner" class="banner hidden"></div>
+  <div class="boards-row" id="cmp-results"></div>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  Word lists: public Wordle answer/guess lists (2,315 answers, 12,972 legal guesses). Daily puzzle is deterministic from the date. No NYT scraping.
+  Companion Discord bot lives in <code>bot/</code>.
+</footer>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
