@@ -7,7 +7,7 @@ One puzzle, solved with two kinds of intelligence. This project solves Wordle wi
 1. An information-theory solver - picks the guess with the highest entropy: the one whose feedback pattern is expected to shrink the space of possible answers the most. It reasons in information bits.
 2. A genetic-algorithm solver - a population of 100+ agents, each with a genome of strategy weights (positional letter frequency, 50/50 split-seeking, when to stop probing and commit…). Every generation the agents play real Wordle games; the weakest half dies, elites survive, parents crossbreed, children mutate. No entropy math is hard-coded - good strategy evolves.
 
-![Racing the entropy AI on the same secret word — and winning, for once](assets/play.png)
+![Racing the evolved GA champion on the same secret word — it finds BRAIN a turn faster](assets/play.png)
 
 ## Watching evolution happen live
 
@@ -57,9 +57,9 @@ My favorite result: high split-seeking weights keep winning, generation after ge
 
 ![The assistant narrowing 2,315 candidates down to 49 after one guess](assets/assistant.png)
 
-**A head-to-head mode** that races every solver on the same word and shows their full reasoning traces side by side. Watching the GA champion stumble from MOUSE to MOOSE while the entropy solver nails it in 3 tells you more about the two approaches than any chart:
+**A head-to-head mode** that races every solver on the same word and shows their full reasoning traces side by side. Watching the entropy solver nail MOUSE in 3, the GA champion probe its way there in 4, and the random baseline run out of turns entirely tells you more about the three strategies than any chart:
 
-![Entropy AI vs GA champion vs random baseline on MOOSE](assets/compare.png)
+![Entropy AI vs GA champion vs random baseline on MOUSE](assets/compare.png)
 
 **A Discord bot** ([`bot/`](bot/)) that wraps the same solver core in slash commands: `/wordle play` to race the AI, `/wordle hint` for help with any position, `/wordle solve`, `/wordle compare`, and a `/wordle daily` puzzle.
 
