@@ -11,9 +11,9 @@ One puzzle, solved with two kinds of intelligence. This project solves Wordle wi
 
 ## Watching evolution happen live
 
-The Evolution Lab runs a real genetic algorithm in your browser. A population of ~100 agents plays actual Wordle games every generation; the weakest half dies, elites survive, parents crossbreed, children mutate. Below is generation 11 solving a shared target — every one of the 100 agents lands the word within four guesses. Ten generations earlier, most of them couldn't solve it at all.
+The Evolution Lab runs a real genetic algorithm in your browser. A population of ~100 agents plays actual Wordle games every generation; the weakest half dies, elites survive, parents crossbreed, children mutate. Below is generation 12 solving a shared target — every one of the 100 agents lands the word within four guesses. Ten generations earlier, most of them couldn't solve it at all.
 
-![100 evolved agents solving AWFUL together, 100/100 by turn 4](assets/evolution-lab.gif)
+![100 evolved agents solving PULSE together, 100/100 by turn 4](assets/evolution-lab.gif)
 
 Each dot in the population view is one agent, plotted by average guesses vs. solve rate. You can watch the cloud drift toward the top-left corner as better strategies take over:
 
