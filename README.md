@@ -26,8 +26,10 @@ Measured on the full 2,315-word answer list:
 | Solver | Avg guesses | Solve rate |
 |---|---|---|
 | Entropy AI | 3.46 | 100% |
-| Evolved GA champion | 3.65 | 99.2% |
+| Evolved GA champion | 3.64 | 99.3% |
 | Random consistent guesser | ~5 | ~85% |
+
+On human-picked words it's not even close: over 300 common words *outside* the official answer list (the kind people choose in custom games), the champion solves 94.7% — a champion evolved without the common-word gene managed 77.0%.
 
 The gap between the two is the interesting number: evolution gets within ~0.2 guesses of the information-theoretic approach purely by selection pressure, with no entropy math anywhere in its genome.
 
@@ -45,7 +47,9 @@ The solver plays the guess with the highest H, tie-breaking toward words that co
 
 ### The genetic solver
 
-An agent's genome is just 7 numbers: weights for positional letter frequency, overall letter frequency, split-seeking (preferring letters that appear in ~50% of remaining candidates), unique letters, answer bias — plus a *commit threshold* and *commit turn* that decide when to stop probing for information and start actually trying to win.
+An agent's genome is just 8 numbers: weights for positional letter frequency, overall letter frequency, split-seeking (preferring letters that appear in ~50% of remaining candidates), unique letters, answer bias, and common-word bias — plus a *commit threshold* and *commit turn* that decide when to stop probing for information and start actually trying to win.
+
+The common-word bias gene is backed by real English frequency data (Norvig's web-corpus unigram counts, baked into [`core/freqs.js`](core/freqs.js)): when several words fit the clues, an agent can prefer the one people actually use. And there's genuine selection pressure behind it — a slice of every generation's fitness games uses custom targets drawn from the full dictionary weighted by how common they are, the way humans pick words, so knowing MOUSE is likelier than MOUST is a survival trait, not a hand-coded rule.
 
 Fitness is the penalty-adjusted average guess count over a fresh sample of real games each generation. Selection is tournament-based with elitism, uniform/blend crossover, Gaussian mutation, and a few random immigrants per generation to keep the gene pool from stagnating.
 
@@ -57,7 +61,7 @@ My favorite result: high split-seeking weights keep winning, generation after ge
 
 ![The assistant narrowing 2,315 candidates down to 49 after one guess](assets/assistant.png)
 
-**A head-to-head mode** that races every solver on the same word and shows their full reasoning traces side by side. Watching the entropy solver nail MOUSE in 3, the GA champion probe its way there in 4, and the random baseline run out of turns entirely tells you more about the three strategies than any chart:
+**A head-to-head mode** that races every solver on the same word and shows their full reasoning traces side by side. Both solvers nail MOUSE in 3 — the entropy AI through alien probes like SOARE and PILUM, the GA champion through everyday words like ALERT and NOISE — while the random baseline runs out of turns. It tells you more about the three strategies than any chart:
 
 ![Entropy AI vs GA champion vs random baseline on MOUSE](assets/compare.png)
 

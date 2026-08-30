@@ -13,6 +13,7 @@
 import { ANSWERS, ALL_WORDS } from './words.js';
 import { computeFeedback, filterWords, ALL_GREEN } from './feedback.js';
 import { allCandidateIndices, filterCandidates } from './tables.js';
+import { commonness } from './freqs.js';
 
 // ---------------------------------------------------------------- genome ---
 
@@ -22,6 +23,7 @@ export const GENE_DEFS = [
   { key: 'wInfo',   min: 0,    max: 2, label: 'Split seeking',        desc: 'prefers letters that split remaining words ~50/50' },
   { key: 'wUnique', min: 0,    max: 1.5, label: 'Unique letters',     desc: 'avoids repeated letters' },
   { key: 'wCand',   min: -0.6, max: 1.5, label: 'Answer bias',        desc: 'prefers guessing words that could be the answer' },
+  { key: 'wCommon', min: 0,    max: 1.5, label: 'Common-word bias',   desc: 'prefers everyday words over obscure ones' },
   { key: 'commitCount', min: 1, max: 60, int: true, label: 'Commit threshold', desc: 'guesses only possible answers once this few remain' },
   { key: 'commitTurn',  min: 1, max: 6,  int: true, label: 'Commit turn',      desc: 'stops probing from this turn onward' },
 ];
@@ -45,6 +47,7 @@ export function describeGenome(genome) {
   if (genome.wUnique >= 0.8) traits.push('no-repeat purist');
   if (genome.wCand >= 0.8) traits.push('go-for-the-win');
   else if (genome.wCand <= 0) traits.push('pure prober');
+  if ((genome.wCommon || 0) >= 0.6) traits.push('everyday-word fan');
   if (genome.commitTurn <= 2) traits.push('commits early');
   else if (genome.commitTurn >= 4) traits.push('probes long');
   if (genome.commitCount >= 30) traits.push('impatient closer');
@@ -130,7 +133,8 @@ export function scoreWord(word, genome, stats, isCandidate) {
     genome.wFreq * (freqScore / 5) +
     genome.wInfo * (infoScore / 5) +
     genome.wUnique * (distinct / 5) +
-    genome.wCand * (isCandidate ? 1 : 0)
+    genome.wCand * (isCandidate ? 1 : 0) +
+    (genome.wCommon || 0) * commonness(word)
   );
 }
 
@@ -276,6 +280,31 @@ export function evaluateGenome(genome, answers, { maxTurns = 6 } = {}) {
 
 // -------------------------------------------------------------- evolution ---
 
+// ---- human-target sampler ----
+// People rarely pick obscure words as custom targets, so when fitness games
+// include off-answer-list targets, draw them weighted by English commonness.
+let TARGET_CDF = null;
+function weightedCustomWord(rng) {
+  if (!TARGET_CDF) {
+    const cum = new Float64Array(ALL_WORDS.length);
+    let s = 0;
+    for (let i = 0; i < ALL_WORDS.length; i++) {
+      const c = commonness(ALL_WORDS[i]);
+      s += c * c; // square the weight so genuinely common words dominate
+      cum[i] = s;
+    }
+    TARGET_CDF = cum;
+  }
+  const r = rng() * TARGET_CDF[TARGET_CDF.length - 1];
+  let lo = 0, hi = TARGET_CDF.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (TARGET_CDF[mid] < r) lo = mid + 1;
+    else hi = mid;
+  }
+  return ALL_WORDS[lo];
+}
+
 /** Deterministic PRNG (mulberry32). */
 export function makeRng(seed) {
   let a = seed >>> 0;
@@ -330,8 +359,9 @@ export class GeneticEvolver {
     immigrantCount = 4,
     seed = 42,
     maxTurns = 6,
+    customShare = 0.15, // fraction of fitness games on human-style custom targets
   } = {}) {
-    this.opts = { populationSize, gamesPerAgent, eliteCount, tournamentK, mutationRate, mutationStrength, immigrantCount, maxTurns };
+    this.opts = { populationSize, gamesPerAgent, eliteCount, tournamentK, mutationRate, mutationStrength, immigrantCount, maxTurns, customShare };
     this.rng = makeRng(seed);
     this.generation = 0;
     this.nextId = 0;
@@ -344,10 +374,12 @@ export class GeneticEvolver {
   }
 
   sampleAnswers() {
-    const { gamesPerAgent } = this.opts;
+    const { gamesPerAgent, customShare } = this.opts;
     const picked = new Set();
     while (picked.size < Math.min(gamesPerAgent, ANSWERS.length)) {
-      picked.add(ANSWERS[Math.floor(this.rng() * ANSWERS.length)]);
+      picked.add(this.rng() < customShare
+        ? weightedCustomWord(this.rng)
+        : ANSWERS[Math.floor(this.rng() * ANSWERS.length)]);
     }
     return [...picked];
   }

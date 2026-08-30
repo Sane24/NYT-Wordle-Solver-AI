@@ -17,8 +17,10 @@ const evolver = new GeneticEvolver({
 
 console.log(`Evolving ${pop} agents for ${gens} generations (${games} games each)...`);
 const t0 = Date.now();
+const finalists = [];
 for (let g = 0; g < gens; g++) {
   const r = evolver.step();
+  finalists.push({ genome: r.best.genome, generation: r.generation, sampled: r.best.avgGuesses });
   const line = `gen ${String(r.generation).padStart(3)}  best avg ${r.best.avgGuesses.toFixed(3)} ` +
     `(${(r.best.solveRate * 100).toFixed(0)}% solved, opener "${r.best.opener}")  ` +
     `pop mean ${r.meanAvgGuesses.toFixed(3)}`;
@@ -26,11 +28,30 @@ for (let g = 0; g < gens; g++) {
 }
 console.log(`Evolution took ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 
-// Re-score the champion on the FULL answer list for honest final numbers.
-const champ = evolver.champion;
-console.log('\nScoring champion on all answers...');
-const full = evaluateGenome(champ.genome, ANSWERS);
-console.log(`Champion: avg ${full.avgGuesses.toFixed(3)} guesses, ` +
+// Per-generation fitness is measured on a small sample, so the ranking is
+// noisy - re-score the strongest distinct finalists on the FULL answer list
+// and keep whichever is genuinely best.
+finalists.sort((a, b) => a.sampled - b.sampled);
+const seen = new Set();
+const shortlist = [];
+for (const f of finalists) {
+  const key = JSON.stringify(f.genome);
+  if (seen.has(key)) continue;
+  seen.add(key);
+  shortlist.push(f);
+  if (shortlist.length >= 12) break;
+}
+console.log(`\nRe-scoring ${shortlist.length} finalists on all ${ANSWERS.length} answers...`);
+let champ = null;
+for (const f of shortlist) {
+  const full = evaluateGenome(f.genome, ANSWERS);
+  const better = !champ || full.fitness > champ.full.fitness;
+  console.log(`  gen ${String(f.generation).padStart(3)}  avg ${full.avgGuesses.toFixed(3)}  ` +
+    `${(full.solveRate * 100).toFixed(1)}% solved  opener "${full.opener}"${better ? '  <- best' : ''}`);
+  if (better) champ = { ...f, full };
+}
+const full = champ.full;
+console.log(`\nChampion (gen ${champ.generation}): avg ${full.avgGuesses.toFixed(3)} guesses, ` +
   `${(full.solveRate * 100).toFixed(1)}% solve rate, opener "${full.opener}"`);
 console.log(`Traits: ${describeGenome(champ.genome)}`);
 

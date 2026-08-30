@@ -2,17 +2,18 @@
 // evolution, re-scored on the full answer list. Do not edit by hand.
 export const CHAMPION = {
   "genome": {
-    "wPos": 0.1806744096102193,
-    "wFreq": 0.8891339213623723,
-    "wInfo": 0.7410333967272891,
-    "wUnique": 0,
-    "wCand": 0.5684275536473251,
-    "commitCount": 40,
-    "commitTurn": 4
+    "wPos": 1.4942122015927453,
+    "wFreq": 1.5568764041381655,
+    "wInfo": 0.8027536870176846,
+    "wUnique": 0.003318210714496672,
+    "wCand": 1.045293678082817,
+    "wCommon": 0.39259445845891605,
+    "commitCount": 43,
+    "commitTurn": 2
   },
-  "opener": "alter",
-  "avgGuesses": 3.6469,
-  "solveRate": 0.9922,
-  "generation": 17,
-  "traits": "mild split-seeker, probes long, impatient closer"
+  "opener": "alert",
+  "avgGuesses": 3.6401,
+  "solveRate": 0.9927,
+  "generation": 18,
+  "traits": "mild split-seeker, position-driven, frequency-driven, go-for-the-win, commits early, impatient closer"
 };
