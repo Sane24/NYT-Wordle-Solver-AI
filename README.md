@@ -51,7 +51,7 @@ Fitness is the penalty-adjusted average guess count over a fresh sample of real 
 
 My favorite result: high split-seeking weights keep winning, generation after generation. That's the 50/50 partition idea at the heart of information theory — rediscovered by evolution, without anyone writing down a logarithm.
 
-## Also in the box
+## Other features
 
 **A solver assistant** for your own games. Mirror any Wordle (including the real NYT one) by typing your guess and clicking the tiles to match the colors you got. The engine tells you how many answers remain, how many bits of uncertainty are left, and the best next guesses, ranked by expected information:
 
