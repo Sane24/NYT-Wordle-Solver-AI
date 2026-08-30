@@ -93,7 +93,8 @@ async function runComparison() {
       setTimeout(() => board.setRow(row, t.guess, t.pattern), row * 280);
     });
     card.querySelector('.cmp-notes').innerHTML = r.trace
-      .map((t, k) => `<div class="turn-note">${k + 1}. ${s.note(t)}</div>`)
+      .map((t, k) => `<div class="turn-note">${k + 1}. ${s.note(t)}${t.widened
+        ? ' <em>(no official answer fits - widened the search to the full 12,972-word dictionary)</em>' : ''}</div>`)
       .join('');
   });
 

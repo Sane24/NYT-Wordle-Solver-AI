@@ -163,6 +163,7 @@ export function solveWord(answer, { openers = null, firstGuess = null, maxTurns 
       move = solver.best();
     }
     const before = solver.candidateCount;
+    const wasOffList = solver.offList;
     const pattern = computeFeedback(move.word, answer);
     solver.observe(move.word, pattern);
     trace.push({
@@ -171,6 +172,7 @@ export function solveWord(answer, { openers = null, firstGuess = null, maxTurns 
       entropy: move.entropy,
       candidatesBefore: before,
       candidatesAfter: solver.candidateCount,
+      widened: !wasOffList && solver.offList,
     });
     if (pattern === ALL_GREEN) break;
   }

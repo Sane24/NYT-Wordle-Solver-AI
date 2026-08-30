@@ -103,6 +103,8 @@ async function aiTakeTurn(ai, forcedGuess = null) {
   move.candidatesAfter = analysis.candidateCount;
   ai.board.setRow(ai.row, move.word, pattern, { hideLetters: state.hideAi });
   ai.explainEl.innerHTML = `<b>Turn ${ai.row + 1}:</b> ` + explainFor(ai, move, pattern);
+  ai.lastMove = move;
+  ai.lastPattern = pattern;
   ai.row++;
   if (pattern === ALL_GREEN) {
     ai.done = true;
@@ -126,6 +128,12 @@ async function finishGame(youTurns) {
     while (!ai.done) await aiTakeTurn(ai);
   }
   revealAiLetters();
+  // The boards just got unmasked - unmask the last explanation lines too.
+  for (const ai of state.ais) {
+    if (ai.lastMove) {
+      ai.explainEl.innerHTML = `<b>Turn ${ai.row}:</b> ` + explainFor(ai, ai.lastMove, ai.lastPattern);
+    }
+  }
 
   const results = [`You: ${youTurns ? youTurns + '/6' : 'X/6'}`];
   for (const ai of state.ais) {

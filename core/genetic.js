@@ -144,6 +144,8 @@ export class AgentSolver {
     this.candidates = allCandidateIndices();
     this.turn = 0;
     this.firstGuess = firstGuess;
+    this.history = [];
+    this.played = new Set();
     this.offList = false;
     this.offListWords = null;
   }
@@ -183,6 +185,7 @@ export class AgentSolver {
     let bestWord = candWords[0] || 'crane';
     let bestScore = -Infinity;
     for (const w of pool) {
+      if (this.played.has(w)) continue; // a repeated guess yields zero information
       const s = scoreWord(w, g, stats, candSet.has(w));
       if (s > bestScore) { bestScore = s; bestWord = w; }
     }
@@ -191,6 +194,7 @@ export class AgentSolver {
       const cap = Math.min(candWords.length, 60);
       for (let i = 0; i < cap; i++) {
         const w = candWords[i];
+        if (this.played.has(w)) continue;
         const s = scoreWord(w, g, stats, true);
         if (s > bestScore) { bestScore = s; bestWord = w; }
       }
@@ -200,14 +204,20 @@ export class AgentSolver {
 
   observe(guess, pattern) {
     this.turn++;
+    this.history.push({ guess, pattern });
+    this.played.add(guess);
     if (this.offList) {
       this.offListWords = filterWords(this.offListWords, guess, pattern);
       return;
     }
     this.candidates = filterCandidates(this.candidates, guess, pattern);
     if (this.candidates.length === 0) {
+      // The target isn't an official answer (manual/custom puzzles).
+      // Fall back to the full guessable dictionary re-filtered by history.
       this.offList = true;
-      this.offListWords = filterWords(ALL_WORDS, guess, pattern);
+      let words = ALL_WORDS;
+      for (const h of this.history) words = filterWords(words, h.guess, h.pattern);
+      this.offListWords = words;
     }
   }
 }
@@ -218,6 +228,7 @@ export function playGame(genome, answer, { firstGuess = null, maxTurns = 6, with
   const trace = withTrace ? [] : null;
   for (let t = 0; t < maxTurns; t++) {
     const before = solver.candidateCount;
+    const wasOffList = solver.offList;
     const move = solver.nextGuess();
     const pattern = computeFeedback(move.word, answer);
     solver.observe(move.word, pattern);
@@ -228,6 +239,7 @@ export function playGame(genome, answer, { firstGuess = null, maxTurns = 6, with
         committed: move.committed,
         candidatesBefore: before,
         candidatesAfter: solver.candidateCount,
+        widened: !wasOffList && solver.offList,
       });
     }
     if (pattern === ALL_GREEN) return { solved: true, turns: t + 1, trace };

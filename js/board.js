@@ -43,10 +43,11 @@ export function createBoard(container, { rows = 6, tileClickable = false } = {})
           t.textContent = hideLetters ? '•' : word[c].toUpperCase();
           t.className = `tile filled ${CLS[tv[c]]}`;
         };
+        clearTimeout(t._flipTimer); // a newer paint must not be undone by an old flip
         if (animate) {
           t.classList.add('flip');
           t.style.animationDelay = `${c * 90}ms`;
-          setTimeout(apply, c * 90 + 250);
+          t._flipTimer = setTimeout(apply, c * 90 + 250);
         } else {
           apply();
         }
@@ -56,6 +57,7 @@ export function createBoard(container, { rows = 6, tileClickable = false } = {})
     paintRow(r, word, tileValues, { clickable = false, onTileClick = null } = {}) {
       for (let c = 0; c < 5; c++) {
         const t = tiles[r][c];
+        clearTimeout(t._flipTimer);
         t.textContent = word[c] ? word[c].toUpperCase() : '';
         t.className = `tile filled ${CLS[tileValues[c]]}` + (clickable ? ' clickable' : '');
         t.onclick = clickable && onTileClick ? () => onTileClick(c) : null;
@@ -72,6 +74,7 @@ export function createBoard(container, { rows = 6, tileClickable = false } = {})
     clearRow(r) {
       for (let c = 0; c < 5; c++) {
         const t = tiles[r][c];
+        clearTimeout(t._flipTimer);
         t.textContent = '';
         t.className = 'tile';
         t.onclick = null;
